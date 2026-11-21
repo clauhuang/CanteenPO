@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CanteenPO</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#000;--surface:#111;--surface2:#171717;--surface3:#1F1F1F;
+  --border:#222;--border2:#2A2A2A;
+  --text:#FFF;--text2:#999;--text3:#555;
+  --red:#FF4444;--red-dim:#1A0000;
+  --green:#3DFF7A;--green-dim:#001A0A;
+  --yellow:#FFD60A;--yellow-dim:#1A1400;
+  --font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+  --radius:10px;--radius-sm:7px;
+}
+body{background:var(--bg);font-family:var(--font-body);color:var(--text);min-height:100vh}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.page{display:none;min-height:100vh}
+.page.active{display:flex}
+
+#page-login{align-items:center;justify-content:center;padding:20px;flex-direction:column}
+.login-box{width:100%;max-width:380px}
+.login-icon{font-size:44px;text-align:center;margin-bottom:18px}
+.login-title{font-family:var(--font-head);font-size:30px;font-weight:800;text-align:center;letter-spacing:-1px;margin-bottom:4px}
+.login-sub{font-size:13.5px;color:var(--text3);text-align:center;margin-bottom:32px}
+.inp-group{margin-bottom:13px}
+.inp-group label{display:block;font-size:10.5px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.inp-group input{
+  width:100%;padding:12px 14px;
+  border:1.5px solid var(--border2);border-radius:var(--radius-sm);
+  font-family:var(--font-body);font-size:14.5px;color:var(--text);
+  background:var(--surface);outline:none;transition:border-color 0.15s;
+}
+.inp-group input:focus{border-color:#555}
+.inp-group input::placeholder{color:var(--text3)}
+.btn-go{
+  width:100%;padding:13px;margin-top:6px;
+  background:var(--text);color:var(--bg);border:none;
+  border-radius:var(--radius-sm);font-family:var(--font-head);
+  font-size:15px;font-weight:700;cursor:pointer;transition:opacity 0.15s;
+}
+.btn-go:hover{opacity:0.85}
+.login-hint{font-size:12px;color:var(--text3);text-align:center;margin-top:14px}
+.err-msg{padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:12px;display:none;background:var(--red-dim);color:var(--red);border:1px solid rgba(255,68,68,0.15)}
+.err-msg.show{display:block}
+
+/* =================== APP LAYOUT =================== */
+#page-app{flex-direction:row}
+
+/* SIDEBAR */
+.sidebar{
+  width:210px;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;flex-shrink:0;
+}
+.sb-top{padding:20px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text)}
+.sb-logo span{font-size:18px;margin-right:6px}
+.sb-user{margin-top:14px;padding:11px 12px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border2)}
+.sb-av{width:30px;height:30px;border-radius:50%;background:var(--text);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;margin-bottom:8px}
+.sb-name{font-size:13px;font-weight:600;color:var(--text)}
+.sb-phone{font-size:11px;color:var(--text3);margin-top:2px}
+
+.sb-nav{padding:12px 10px;flex:1;overflow-y:auto}
+.sb-section{font-size:9.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);padding:8px 8px 4px;margin-top:6px}
+.sb-item{
+  display:flex;align-items:center;gap:9px;padding:9px 10px;
+  border-radius:var(--radius-sm);cursor:pointer;color:var(--text2);
+  font-size:13.5px;transition:all 0.15s;margin-bottom:1px;user-select:none;
+}
+.sb-item:hover{background:var(--surface2);color:var(--text)}
+.sb-item.active{background:var(--text);color:var(--bg);font-weight:600}
+.sb-item .ico{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+
+.sb-bottom{padding:12px 10px;border-top:1px solid var(--border)}
+.btn-logout{
+  width:100%;padding:9px;background:transparent;border:1px solid var(--border2);
+  border-radius:var(--radius-sm);color:var(--text3);font-size:13px;
+  cursor:pointer;font-family:var(--font-body);transition:all 0.15s;text-align:center;
+}
+.btn-logout:hover{border-color:var(--red);color:var(--red)}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;min-width:0}
+.main-inner{padding:28px 32px;max-width:900px}
+.sec-title{font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:20px;color:var(--text)}
+
+/* SECTIONS */
+.sec{display:none}
+.sec.active{display:block}
+
+/* =================== ORDER =================== */
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:24px}
+.mc{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--radius);padding:16px;cursor:default;transition:all 0.2s;position:relative;
+}
+.mc.selected{border-color:var(--text);background:var(--surface2)}
+.mc.oos{opacity:0.3}
+.mc-check{position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:50%;background:var(--text);color:var(--bg);display:none;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+.mc.selected .mc-check{display:flex}
+.mc-emoji{font-size:26px;margin-bottom:10px}
+.mc-name{font-family:var(--font-head);font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.3}
+.mc-price{font-size:16px;font-weight:700;color:var(--text);margin-bottom:5px}
+.mc-stock{font-size:11px;color:var(--text3)}
+.mc-stock.low{color:var(--yellow)}
+.mc-stock.out{color:var(--red)}
+.qty-row{display:flex;align-items:center;gap:9px;margin-top:11px}
+.qbtn{width:25px;height:25px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;line-height:1}
+.qbtn:hover{border-color:var(--text);color:var(--text)}
+.qnum{font-size:13.5px;font-weight:600;min-width:20px;text-align:center;color:var(--text)}
+
+/* ORDER SUMMARY BOX */
+.order-summary{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-top:4px}
+.os-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}
+.os-empty{font-size:13px;color:var(--text3);padding:8px 0}
+.os-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.os-row:last-child{border-bottom:none}
+.os-row .nm{color:var(--text2);flex:1}
+.os-row .qt{color:var(--text3);margin:0 8px;font-size:12px}
+.os-row .pr{color:var(--text);font-weight:600}
+.os-total{display:flex;justify-content:space-between;align-items:center;padding-top:12px;margin-top:4px;border-top:1px solid var(--border2)}
+.os-total .lbl{font-size:13px;color:var(--text3)}
+.os-total .val{font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--text)}
+
+/* PICKUP FORM */
+.pickup-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.pf-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}
+.pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pf-group label{display:block;font-size:10px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.pf-group input{
+  width:100%;padding:9px 11px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);
+  font-family:var(--font-body);font-size:13px;color:var(--text);
+  background:var(--surface2);outline:none;transition:border-color 0.15s;
+}
+.pf-group input:focus{border-color:#555}
+
+.btn-place{
+  width:100%;padding:13px;margin-top:14px;
+  background:var(--text);color:var(--bg);border:none;
+  border-radius:var(--radius-sm);font-family:var(--font-head);
+  font-size:15px;font-weight:700;cursor:pointer;transition:opacity 0.15s;
+}
+.btn-place:hover{opacity:0.85}
+.btn-place:disabled{background:var(--surface3);color:var(--text3);cursor:not-allowed;opacity:1}
+
+/* =================== MY ORDERS / HISTORY =================== */
+.orders-empty{text-align:center;padding:60px 20px;color:var(--text3);font-size:14px}
+.order-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;
+  transition:border-color 0.15s;
+}
+.order-card:hover{border-color:var(--border2)}
+.oc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.oc-id{font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--text)}
+.oc-date{font-size:11.5px;color:var(--text3);margin-top:3px}
+.badge{display:inline-flex;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-pending{background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(255,214,10,0.15)}
+.badge-completed{background:var(--green-dim);color:var(--green);border:1px solid rgba(61,255,122,0.15)}
+.badge-cancelled{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,68,68,0.15)}
+.oc-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border)}
+.oc-total{font-family:var(--font-head);font-size:17px;font-weight:700;color:var(--text)}
+.oc-pickup{font-size:11.5px;color:var(--text3);margin-top:2px}
+.btn-cancel{
+  padding:6px 14px;background:transparent;
+  border:1px solid rgba(255,68,68,0.25);border-radius:6px;
+  color:var(--red);font-size:12px;cursor:pointer;
+  font-family:var(--font-body);transition:all 0.15s;
+}
+.btn-cancel:hover{background:var(--red-dim)}
+
+/* =================== SUCCESS =================== */
+#page-success{align-items:center;justify-content:center;padding:24px;flex-direction:column}
+.suc-box{width:100%;max-width:420px;text-align:center}
+.suc-icon{font-size:50px;margin-bottom:14px}
+.suc-title{font-family:var(--font-head);font-size:26px;font-weight:800;margin-bottom:6px}
+.suc-sub{font-size:13.5px;color:var(--text3);margin-bottom:22px}
+.suc-detail{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:left;margin-bottom:20px}
+.sd-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px}
+.sd-row:last-child{margin-bottom:0;padding-top:9px;border-top:1px solid var(--border);font-weight:600}
+.sd-row .l{color:var(--text3)}.sd-row .v{color:var(--text)}
+.btn-again{padding:12px 28px;background:var(--text);color:var(--bg);border:none;border-radius:var(--radius-sm);font-family:var(--font-head);font-size:15px;font-weight:700;cursor:pointer}
+.btn-again:hover{opacity:0.85}
+
+/* OVERLAY & TOAST */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:200;flex-direction:column;gap:12px}
+.overlay.show{display:flex}
+.spinner{width:30px;height:30px;border:2.5px solid var(--border2);border-top-color:var(--text);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.overlay p{color:var(--text2);font-size:13.5px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 20px;font-size:13px;color:var(--text);z-index:300;transition:transform 0.3s ease;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{border-color:rgba(255,68,68,0.3);color:var(--red)}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"><div class="spinner"></div><p id="ov-msg">Processing…</p></div>
+<div class="toast" id="toast"></div>
+
+<!-- =================== LOGIN =================== -->
+<div class="page active" id="page-login">
+  <div class="login-box">
+    <div class="login-icon">🍱</div>
+    <div class="login-title">CanteenPO</div>
+    <div class="login-sub">Enter your details to start ordering</div>
+    <div class="err-msg" id="err-login"></div>
+    <div class="inp-group"><label>Full Name</label><input type="text" id="l-name" placeholder="e.g. Claudia" autocomplete="off"></div>
+    <div class="inp-group"><label>Phone Number</label><input type="tel" id="l-phone" placeholder="e.g. 0912345678" autocomplete="off"></div>
+    <button class="btn-go" onclick="doLogin()">Continue →</button>
+  </div>
+</div>
+
+<!-- =================== APP =================== -->
+<div class="page" id="page-app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-top">
+      <div class="sb-logo"><span>🍱</span>CanteenPO</div>
+      <div class="sb-user">
+        <div class="sb-av" id="sb-av">?</div>
+        <div class="sb-name" id="sb-name">—</div>
+        <div class="sb-phone" id="sb-phone">—</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Order</div>
+      <div class="sb-item active" onclick="goSec('order',this)"><span class="ico">🍽️</span>Menu & Order</div>
+      <div class="sb-section">My Account</div>
+      <div class="sb-item" onclick="goSec('my-orders',this)"><span class="ico">📋</span>My Orders</div>
+      <div class="sb-item" onclick="goSec('history',this)"><span class="ico">🕓</span>Order History</div>
+    </nav>
+    <div class="sb-bottom">
+      <button class="btn-logout" onclick="doLogout()">← Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <div class="main-inner">
+
+      <!-- ORDER SECTION -->
+      <div class="sec active" id="sec-order">
+        <div class="sec-title">Today's Menu 🍽️</div>
+        <div class="menu-grid" id="menu-grid"></div>
+        <div class="pickup-form">
+          <div class="pf-title">Pickup Details</div>
+          <div class="pf-grid">
+            <div class="pf-group"><label>Date</label><input type="date" id="p-date"></div>
+            <div class="pf-group"><label>Time</label><input type="time" id="p-time"></div>
+          </div>
+        </div>
+        <div class="order-summary">
+          <div class="os-title">Your Order</div>
+          <div id="cart-display"><div class="os-empty">No items selected. Pick from the menu above!</div></div>
+          <div class="os-total">
+            <span class="lbl">Total</span>
+            <span class="val" id="cart-total">$ 0</span>
+          </div>
+        </div>
+        <button class="btn-place" id="btn-place" onclick="doPlaceOrder()" disabled>Place Order</button>
+      </div>
+
+      <div class="sec" id="sec-my-orders">
+        <div class="sec-title">My Orders 📋</div>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:18px">Your active & recent orders. Cancel if needed.</p>
+        <div id="my-orders-list"></div>
+      </div>
+
+      <div class="sec" id="sec-history">
+        <div class="sec-title">Order History 🕓</div>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:18px">All your past orders.</p>
+        <div id="history-list"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-success">
+  <div class="suc-box">
+    <div class="suc-icon">✅</div>
+    <div class="suc-title">Order Placed!</div>
+    <div class="suc-sub">Your food will be ready at pickup time</div>
+    <div class="suc-detail" id="suc-detail"></div>
+    <button class="btn-again" onclick="backToOrder()">Order Again</button>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3000/api';
+let user = null, menuData = [], cart = {};
+
+// ============================================================
+// HELPERS
+// ============================================================
+function fmt(n){ return '$ '+Number(n||0).toFixed(0); }
+function showPage(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+id).classList.add('active'); }
+function showOv(msg){ document.getElementById('ov-msg').textContent=msg; document.getElementById('overlay').classList.add('show'); }
+function hideOv(){ document.getElementById('overlay').classList.remove('show'); }
+function toast(msg,err=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(err?' err':'');
+  setTimeout(()=>t.classList.add('show'),10);
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+function badge(s){
+  const m={Pending:'badge-pending',Completed:'badge-completed',Cancelled:'badge-cancelled'};
+  return `<span class="badge ${m[s]||'badge-pending'}">${s}</span>`;
+}
+const EM={'chicken':'🍗','taco':'🌮','grilled':'🥩','beef':'🥩'};
+function emoji(name){ const n=name.toLowerCase(); for(const k in EM) if(n.includes(k)) return EM[k]; return '🍱'; }
+
+// ============================================================
+// LOGIN
+// ============================================================
+function doLogin(){
+  const name=document.getElementById('l-name').value.trim();
+  const phone=document.getElementById('l-phone').value.trim();
+  const err=document.getElementById('err-login');
+  if(!name){err.textContent='Please enter your name.';err.classList.add('show');return;}
+  if(!phone){err.textContent='Please enter your phone number.';err.classList.add('show');return;}
+  if(!/^[0-9]{8,15}$/.test(phone)){err.textContent='Phone must be 8–15 digits.';err.classList.add('show');return;}
+  err.classList.remove('show');
+  user={name,phone};
+  document.getElementById('sb-av').textContent=name.charAt(0).toUpperCase();
+  document.getElementById('sb-name').textContent=name;
+  document.getElementById('sb-phone').textContent=phone;
+  const now=new Date();
+  document.getElementById('p-date').value=now.toISOString().split('T')[0];
+  document.getElementById('p-time').value=now.toTimeString().slice(0,5);
+  cart={};
+  loadMenu();
+  showPage('app');
+  goSec('order',document.querySelector('.sb-item'));
+}
+document.getElementById('l-phone').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('l-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('l-phone').focus();});
+
+function doLogout(){
+  user=null;cart={};
+  document.getElementById('l-name').value='';
+  document.getElementById('l-phone').value='';
+  showPage('login');
+}
+
+// ============================================================
+// SIDEBAR NAV
+// ============================================================
+function goSec(id, el){
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(id==='my-orders') loadMyOrders();
+  if(id==='history')   loadHistory();
+}
+
+// ============================================================
+// MENU
+// ============================================================
+async function loadMenu(){
+  try{
+    const res=await fetch(`${API}/menu`);
+    menuData=await res.json();
+    renderMenu();
+  }catch(e){
+    document.getElementById('menu-grid').innerHTML=`<div style="color:var(--red);font-size:13px">Failed to load menu. Is server running?</div>`;
+  }
+}
+function renderMenu(){
+  const grid=document.getElementById('menu-grid');
+  if(!menuData.length){grid.innerHTML=`<div style="color:var(--text3);font-size:13px">No menu available.</div>`;return;}
+  grid.innerHTML=menuData.map(m=>{
+    const inCart=cart[m.MenuID]; const qty=inCart?inCart.qty:0;
+    const oos=m.Stock<=0; const low=m.Stock>0&&m.Stock<=5;
+    const stxt=oos?'Out of stock':low?`Only ${m.Stock} left!`:`${m.Stock} available`;
+    const scls=oos?'out':low?'low':'';
+    return `<div class="mc ${inCart?'selected':''} ${oos?'oos':''}" id="mc-${m.MenuID}">
+      <div class="mc-check">✓</div>
+      <div class="mc-emoji">${emoji(m.MenuName)}</div>
+      <div class="mc-name">${m.MenuName}</div>
+      <div class="mc-price">${fmt(m.Price)}</div>
+      <div class="mc-stock ${scls}">${stxt}</div>
+      ${!oos?`<div class="qty-row">
+        <button class="qbtn" onclick="chQty(${m.MenuID},-1,event)">−</button>
+        <span class="qnum" id="qn-${m.MenuID}">${qty}</span>
+        <button class="qbtn" onclick="chQty(${m.MenuID},1,event)">+</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+function chQty(mid,delta,e){
+  e.stopPropagation();
+  const m=menuData.find(x=>x.MenuID===mid); if(!m)return;
+  const cur=cart[mid]?cart[mid].qty:0;
+  const nq=Math.max(0,Math.min(cur+delta,m.Stock));
+  if(nq===0)delete cart[mid]; else cart[mid]={item:m,qty:nq};
+  const qel=document.getElementById(`qn-${mid}`); if(qel)qel.textContent=nq;
+  const card=document.getElementById(`mc-${mid}`); if(card){nq>0?card.classList.add('selected'):card.classList.remove('selected');}
+  updateCart();
+}
+function updateCart(){
+  const items=Object.values(cart);
+  const total=items.reduce((s,c)=>s+c.item.Price*c.qty,0);
+  document.getElementById('cart-total').textContent=fmt(total);
+  document.getElementById('btn-place').disabled=items.length===0;
+  const disp=document.getElementById('cart-display');
+  if(!items.length){disp.innerHTML=`<div class="os-empty">No items selected. Pick from the menu above!</div>`;return;}
+  disp.innerHTML=items.map(c=>`<div class="os-row"><span class="nm">${c.item.MenuName}</span><span class="qt">×${c.qty}</span><span class="pr">${fmt(c.item.Price*c.qty)}</span></div>`).join('');
+}
+
+// ============================================================
+// PLACE ORDER
+// ============================================================
+async function doPlaceOrder(){
+  const date=document.getElementById('p-date').value;
+  const time=document.getElementById('p-time').value;
+  if(!date||!time){toast('Please set pickup date and time!',true);return;}
+  const items=Object.values(cart).map(c=>({MenuID:c.item.MenuID,Quantity:c.qty,Subtotal:c.item.Price*c.qty}));
+  const total=items.reduce((s,i)=>s+i.Subtotal,0);
+  showOv('Placing your order…');
+  try{
+    const res=await fetch(`${API}/orders`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({CustName:user.name,PhoneNum:user.phone,OrderDate:date,PickupTime:time,Status:'Pending',items})
+    });
+    const data=await res.json(); hideOv();
+    if(data.error){toast('Error: '+data.error,true);return;}
+    document.getElementById('suc-detail').innerHTML=`
+      <div class="sd-row"><span class="l">Order ID</span><span class="v">#${data.OrderID}</span></div>
+      <div class="sd-row"><span class="l">Name</span><span class="v">${user.name}</span></div>
+      <div class="sd-row"><span class="l">Phone</span><span class="v">${user.phone}</span></div>
+      <div class="sd-row"><span class="l">Pickup Date</span><span class="v">${date}</span></div>
+      <div class="sd-row"><span class="l">Pickup Time</span><span class="v">${time}</span></div>
+      <div class="sd-row"><span class="l">Items</span><span class="v">${items.length} item(s)</span></div>
+      <div class="sd-row"><span class="l">Total</span><span class="v">${fmt(total)}</span></div>`;
+    cart={}; showPage('success');
+  }catch(e){hideOv();toast('Failed to place order.',true);}
+}
+function backToOrder(){
+  renderMenu(); updateCart();
+  showPage('app');
+  goSec('order',document.querySelector('.sb-item'));
+}
+
+// ============================================================
+// MY ORDERS (Pending only — can cancel)
+// ============================================================
+async function loadMyOrders(){
+  const list=document.getElementById('my-orders-list');
+  list.innerHTML=`<div class="orders-empty">Loading…</div>`;
+  try{
+    const res = await fetch(`${API}/orders/by-phone/${encodeURIComponent(user.phone)}`);
+    const orders=await res.json();
+    const myOrders = orders.filter(o => o.Status === 'Pending');
+    if(!orders.length){list.innerHTML=`<div class="orders-empty">No active orders.<br>Go place an order! 🍱</div>`;return;}
+    list.innerHTML=orders.map(o=>`
+      <div class="order-card" id="oc-${o.OrderID}">
+        <div class="oc-top">
+          <div><div class="oc-id">Order #${o.OrderID}</div><div class="oc-date">${o.OrderDate||'—'}</div></div>
+          ${badge(o.Status)}
+        </div>
+        <div class="oc-bottom">
+          <div><div class="oc-total">${fmt(o.TotalPrice)}</div><div class="oc-pickup">Pickup: ${o.PickupTime||'—'}</div></div>
+          <button class="btn-cancel" onclick="cancelOrder(${o.OrderID})">Cancel</button>
+        </div>
+      </div>`).join('');
+  }catch(e){list.innerHTML=`<div class="orders-empty" style="color:var(--red)">Failed to load orders.</div>`;}
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+async function loadHistory(){
+  const list=document.getElementById('history-list');
+  list.innerHTML=`<div class="orders-empty">Loading…</div>`;
+  try{
+    const res = await fetch(`${API}/orders/by-phone/${encodeURIComponent(user.phone)}`);
+    const orders=await res.json();
+    if(!orders.length){list.innerHTML=`<div class="orders-empty">No order history yet.</div>`;return;}
+    list.innerHTML=orders.map(o=>`
+      <div class="order-card">
+        <div class="oc-top">
+          <div><div class="oc-id">Order #${o.OrderID}</div><div class="oc-date">${o.OrderDate||'—'} · Pickup ${o.PickupTime||'—'}</div></div>
+          ${badge(o.Status)}
+        </div>
+        <div class="oc-bottom">
+          <div><div class="oc-total">${fmt(o.TotalPrice)}</div></div>
+        </div>
+      </div>`).join('');
+  }catch(e){list.innerHTML=`<div class="orders-empty" style="color:var(--red)">Failed to load history.</div>`;}
+}
+
+// ============================================================
+// CANCEL ORDER
+// ============================================================
+async function cancelOrder(id){
+  if(!confirm(`Cancel order #${id}?`))return;
+  showOv('Cancelling…');
+  try{
+    const res=await fetch(`${API}/orders/${id}/status`,{
+      method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({Status:'Cancelled'})
+    });
+    const data=await res.json(); hideOv();
+    if(data.error){toast('Error: '+data.error,true);return;}
+    toast(`Order #${id} cancelled.`);
+    loadMyOrders();
+  }catch(e){hideOv();toast('Failed to cancel.',true);}
+}
+</script>
+</body>
+</html>

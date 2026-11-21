@@ -1,0 +1,5 @@
+CREATE DATABASE CanteenPoDB;
+GO
+
+USE CanteenPoDB;
+GO
